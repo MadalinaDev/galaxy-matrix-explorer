@@ -26,13 +26,8 @@ export default function GalaxyVisualization({
     canvas.width = width;
     canvas.height = height;
 
-    ctx.fillStyle = "#000";
-    ctx.fillRect(0, 0, width, height);
-
     drawStars(ctx, width, height);
-
     drawEdges(ctx, graph, currentState, width, height);
-
     drawNodes(ctx, graph, currentState, startNode, endNode, width, height);
   }, [graph, currentState, startNode, endNode]);
 
@@ -54,7 +49,11 @@ export default function GalaxyVisualization({
 
   function drawEdges(
     ctx: CanvasRenderingContext2D,
-    graph: { edges: any[]; nodes: { x: number; y: number }[] },
+    graph: {
+      edges: any[];
+      nodes: { x: number; y: number }[];
+      isDirected: boolean;
+    },
     currentState: {
       visited?: number[];
       mst?: { source: number; target: number }[];
@@ -62,7 +61,7 @@ export default function GalaxyVisualization({
     width: number,
     height: number
   ) {
-    const { edges, nodes } = graph;
+    const { edges, nodes, isDirected } = graph;
     const { visited = [], mst = [] } = currentState;
 
     edges.forEach((edge) => {
@@ -99,6 +98,10 @@ export default function GalaxyVisualization({
       ctx.lineTo(targetX, targetY);
       ctx.stroke();
 
+      if (isDirected || edge.directed) {
+        drawArrow(ctx, sourceX, sourceY, targetX, targetY, 10);
+      }
+
       if (edge.weight !== undefined) {
         const midX = (sourceX + targetX) / 2;
         const midY = (sourceY + targetY) / 2;
@@ -117,9 +120,36 @@ export default function GalaxyVisualization({
     });
   }
 
+  const drawArrow = (
+    ctx: CanvasRenderingContext2D,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    radius: number
+  ) => {
+    const angle = Math.atan2(toY - fromY, toX - fromX);
+    const arrowX = toX - Math.cos(angle) * radius * 1.5;
+    const arrowY = toY - Math.sin(angle) * radius * 1.5;
+
+    ctx.beginPath();
+    ctx.moveTo(arrowX, arrowY);
+    ctx.lineTo(
+      arrowX - 10 * Math.cos(angle - Math.PI / 6),
+      arrowY - 10 * Math.sin(angle - Math.PI / 6)
+    );
+    ctx.lineTo(
+      arrowX - 10 * Math.cos(angle + Math.PI / 6),
+      arrowY - 10 * Math.sin(angle + Math.PI / 6)
+    );
+    ctx.closePath();
+    ctx.fillStyle = ctx.strokeStyle as string;
+    ctx.fill();
+  };
+
   function drawNodes(
     ctx: CanvasRenderingContext2D,
-    graph: { nodes: { x: number; y: number }[] },
+    graph: { nodes: { x: number; y: number; group?: number }[] },
     currentState: {
       visited?: number[];
       current?: number | null;
@@ -144,20 +174,24 @@ export default function GalaxyVisualization({
       const y = node.y * height;
       const radius = 15;
 
-      let fillColor = "#6b7280"; 
+      let fillColor = "#6b7280";
+
+      if (node.group !== undefined) {
+        fillColor = node.group === 0 ? "#8b5cf6" : "#ec4899";
+      }
 
       if (index === startNode) {
-        fillColor = "#10b981"; 
+        fillColor = "#10b981";
       } else if (index === endNode) {
-        fillColor = "#ef4444"; 
+        fillColor = "#ef4444";
       } else if (index === current) {
         fillColor = "#f59e0b";
       } else if (visited.includes(index)) {
-        fillColor = "#3b82f6"; 
+        fillColor = "#3b82f6";
       } else if (queue.includes(index)) {
-        fillColor = "#8b5cf6"; 
+        fillColor = "#8b5cf6";
       } else if (stack.includes(index)) {
-        fillColor = "#ec4899"; 
+        fillColor = "#ec4899";
       }
 
       ctx.beginPath();

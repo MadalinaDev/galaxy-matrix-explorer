@@ -5,11 +5,13 @@ export default function AdjacencyMatrix({
   currentState,
   startNode,
   endNode,
+  isDirected = false,
 }: {
-  matrix: any,
-  currentState: any,
-  startNode: any,
-  endNode: any,
+  matrix: any;
+  currentState: any;
+  startNode: any;
+  endNode: any;
+  isDirected: boolean;
 }) {
   if (!matrix || matrix.length === 0) {
     return <div className="text-center p-4">No matrix data available</div>;
@@ -63,12 +65,19 @@ export default function AdjacencyMatrix({
                 const isVisitedEdge =
                   visited.includes(rowIndex) && visited.includes(colIndex);
 
+                const isAsymmetric =
+                  isDirected &&
+                  matrix[rowIndex][colIndex] !== Number.POSITIVE_INFINITY &&
+                  matrix[colIndex][rowIndex] === Number.POSITIVE_INFINITY;
+
                 if (cell === Number.POSITIVE_INFINITY || cell === 0) {
                   bgColor = "bg-gray-50";
                 } else if (isCurrentEdge) {
                   bgColor = "bg-yellow-100";
                 } else if (isVisitedEdge) {
                   bgColor = "bg-blue-50";
+                } else if (isAsymmetric) {
+                  bgColor = "bg-purple-50";
                 }
 
                 return (
@@ -77,6 +86,13 @@ export default function AdjacencyMatrix({
                     className={`p-2 border border-gray-300 text-center ${bgColor}`}
                   >
                     {cell === Number.POSITIVE_INFINITY ? "∞" : cell}
+                    {isDirected &&
+                      cell !== Number.POSITIVE_INFINITY &&
+                      cell !== 0 &&
+                      matrix[colIndex][rowIndex] ===
+                        Number.POSITIVE_INFINITY && (
+                        <span className="text-xs ml-1">→</span>
+                      )}
                   </td>
                 );
               })}
