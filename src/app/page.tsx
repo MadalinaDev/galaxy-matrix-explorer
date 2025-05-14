@@ -3,7 +3,8 @@ import AlgorithmVisualizer from "@/components/layout/algorithm-visualizer";
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-4 md:p-8 w-full">
-      <h1 className="text-3xl font-bold mb-6">Galaxy Algorithm Visualizer</h1>
+      <h1 className="text-3xl font-bold">Galaxy Algorithm Visualizer</h1>
+      <h6 className="mt-1 mb-8 text-sm text-muted-foreground">A project developed by © Madalina Chirpicinic 2025 </h6>
       <div className="w-full max-w-7xl mb-8">
         <div className="bg-gray-100 p-4 rounded-md">
           <h2 className="text-xl font-semibold mb-2">
