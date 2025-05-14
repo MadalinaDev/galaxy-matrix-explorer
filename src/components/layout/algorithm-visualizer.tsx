@@ -171,6 +171,7 @@ export default function AlgorithmVisualizer() {
   const [speed, setSpeed] = useState<number[]>([50]);
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [algorithmSteps, setAlgorithmSteps] = useState<AlgorithmStep[]>([]);
+  const [executionTime, setExecutionTime] = useState<number | null>(null);
   const [showInfo, setShowInfo] = useState<boolean>(false);
   const [startNode, setStartNode] = useState<number>(0);
   const [endNode, setEndNode] = useState<number>(nodes - 1);
@@ -226,11 +227,15 @@ export default function AlgorithmVisualizer() {
     setCurrentStep(0);
     try {
       const fn = algorithmFunctions[selectedAlgorithm];
+      const t0 = performance.now();
       const steps = fn(graph.adjacencyMatrix, startNode, endNode);
+      const t1 = performance.now();
       setAlgorithmSteps(steps);
+      setExecutionTime(t1 - t0);
     } catch (err) {
       console.error("Failed to execute algorithm:", err);
       setAlgorithmSteps([]);
+      setExecutionTime(null);
     }
   };
 
@@ -290,6 +295,95 @@ export default function AlgorithmVisualizer() {
           </CardHeader>
           <CardContent>
             <div className="space-y-6">
+              <div className="p-4 bg-muted rounded-md">
+                <p className="font-medium">
+                  Current Step: {currentStep + 1} / {algorithmSteps.length}
+                </p>
+                <p className="text-sm mt-2">{currentState.message}</p>
+                {executionTime !== null && (
+                  <p className="text-sm mt-2">
+                    Execution Time: {executionTime.toFixed(6)} ms
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Badge
+                  variant={graph.properties.isConnected ? "default" : "outline"}
+                >
+                  {graph.properties.isConnected ? "Connected" : "Disconnected"}
+                </Badge>
+                <Badge
+                  variant={graph.properties.isCyclic ? "default" : "outline"}
+                >
+                  {graph.properties.isCyclic ? "Cyclic" : "Acyclic"}
+                </Badge>
+                <Badge
+                  variant={graph.properties.isDense ? "default" : "outline"}
+                >
+                  {graph.properties.isDense ? "Dense" : "Sparse"}
+                </Badge>
+                <Badge
+                  variant={graph.properties.isTree ? "default" : "outline"}
+                >
+                  {graph.properties.isTree ? "Tree" : "Not a Tree"}
+                </Badge>
+                <Badge
+                  variant={graph.properties.isComplete ? "default" : "outline"}
+                >
+                  {graph.properties.isComplete ? "Complete" : "Incomplete"}
+                </Badge>
+                <Badge
+                  variant={graph.properties.isBipartite ? "default" : "outline"}
+                >
+                  {graph.properties.isBipartite ? "Bipartite" : "Not Bipartite"}
+                </Badge>
+                <Badge variant={graph.isDirected ? "default" : "outline"}>
+                  {graph.isDirected ? "Directed" : "Undirected"}
+                </Badge>
+              </div>
+
+              <div className="flex justify-between items-center">
+                <div className="flex gap-2">
+                  <Button
+                    variant={isPlaying ? "outline" : "default"}
+                    size="icon"
+                    onClick={() => setIsPlaying(!isPlaying)}
+                  >
+                    {isPlaying ? (
+                      <Pause className="h-4 w-4" />
+                    ) : (
+                      <Play className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() =>
+                      currentStep < algorithmSteps.length - 1 &&
+                      setCurrentStep((prev) => prev + 1)
+                    }
+                    disabled={currentStep >= algorithmSteps.length - 1}
+                  >
+                    <SkipForward className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={resetAlgorithm}
+                  >
+                    <RotateCcw className="h-4 w-4" />
+                  </Button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setShowInfo(!showInfo)}
+                >
+                  <Info className="h-4 w-4" />
+                </Button>
+              </div>
+
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1">
                   <label className="text-sm font-medium mb-2 block">
@@ -325,7 +419,7 @@ export default function AlgorithmVisualizer() {
                       <SelectValue placeholder="Number of nodes" />
                     </SelectTrigger>
                     <SelectContent>
-                      {[5, 10, 15, 20].map((n) => (
+                      {[5, 10, 15, 20, 50, 100].map((n) => (
                         <SelectItem key={n} value={n.toString()}>
                           {n} nodes
                         </SelectItem>
@@ -421,90 +515,6 @@ export default function AlgorithmVisualizer() {
                   step={1}
                   className="my-4"
                 />
-              </div>
-
-              <div className="flex justify-between items-center">
-                <div className="flex gap-2">
-                  <Button
-                    variant={isPlaying ? "outline" : "default"}
-                    size="icon"
-                    onClick={() => setIsPlaying(!isPlaying)}
-                  >
-                    {isPlaying ? (
-                      <Pause className="h-4 w-4" />
-                    ) : (
-                      <Play className="h-4 w-4" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() =>
-                      currentStep < algorithmSteps.length - 1 &&
-                      setCurrentStep((prev) => prev + 1)
-                    }
-                    disabled={currentStep >= algorithmSteps.length - 1}
-                  >
-                    <SkipForward className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={resetAlgorithm}
-                  >
-                    <RotateCcw className="h-4 w-4" />
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => setShowInfo(!showInfo)}
-                >
-                  <Info className="h-4 w-4" />
-                </Button>
-              </div>
-
-              <div className="p-4 bg-muted rounded-md">
-                <p className="font-medium">
-                  Current Step: {currentStep + 1} / {algorithmSteps.length}
-                </p>
-                <p className="text-sm mt-2">{currentState.message}</p>
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                <Badge
-                  variant={graph.properties.isConnected ? "default" : "outline"}
-                >
-                  {graph.properties.isConnected ? "Connected" : "Disconnected"}
-                </Badge>
-                <Badge
-                  variant={graph.properties.isCyclic ? "default" : "outline"}
-                >
-                  {graph.properties.isCyclic ? "Cyclic" : "Acyclic"}
-                </Badge>
-                <Badge
-                  variant={graph.properties.isDense ? "default" : "outline"}
-                >
-                  {graph.properties.isDense ? "Dense" : "Sparse"}
-                </Badge>
-                <Badge
-                  variant={graph.properties.isTree ? "default" : "outline"}
-                >
-                  {graph.properties.isTree ? "Tree" : "Not a Tree"}
-                </Badge>
-                <Badge
-                  variant={graph.properties.isComplete ? "default" : "outline"}
-                >
-                  {graph.properties.isComplete ? "Complete" : "Incomplete"}
-                </Badge>
-                <Badge
-                  variant={graph.properties.isBipartite ? "default" : "outline"}
-                >
-                  {graph.properties.isBipartite ? "Bipartite" : "Not Bipartite"}
-                </Badge>
-                <Badge variant={graph.isDirected ? "default" : "outline"}>
-                  {graph.isDirected ? "Directed" : "Undirected"}
-                </Badge>
               </div>
             </div>
           </CardContent>
